@@ -42,6 +42,7 @@ class People(db.Model):
     gender = db.Column(db.String(10))
     homeworld = db.Column(db.Integer, db.ForeignKey('planet.planet_id'))
     url = db.Column(db.String(250))
+    planet = db.relationship('Planet', backref='people')
     
     def __repr__(self):
         return '<People %r>' % self.name
@@ -56,7 +57,7 @@ class People(db.Model):
             "eye_color" : self.eye_color,
             "birth_year" : self.birth_year,
             "gender" : self.gender,
-            "homeworld" : self.homeworld,
+            "homeworld" : self.planet.serialize['name'] if self.planet else None,
             "url" : self.url
         }
 
@@ -74,7 +75,8 @@ class Planet(db.Model):
     climate = db.Column(db.String(50))
     terrain = db.Column(db.String(100))
     url = db.Column(db.String(100))
-    relation_people = db.relationship('People', backref='planet')
+    # residents = db.Column(db.Integer, db.ForeignKey('people.people_id'))
+    # people = db.relationship('People', backref='planet')
     
     
     
@@ -102,7 +104,7 @@ class Favorite_people(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     relation_user = db.Column(db.Integer, db.ForeignKey('user.user_id'))
     relation_people = db.Column(db.Integer, db.ForeignKey('people.people_id'))
-    people = db.relationship('People', backref='favorite_people', lazy=True)
+    people = db.relationship('People', cascade = "all,delete", backref='favorite_people', lazy=True)
     
 
     def __repr__(self):
@@ -121,9 +123,9 @@ class Favorite_people(db.Model):
 class Favorite_planet(db.Model):
     __tablename__ = 'favorite_planet'
     id = db.Column(db.Integer, primary_key=True)
-    relation_user = db.Column(db.Integer, db.ForeignKey('user.user_id'))
-    relation_planet = db.Column(db.Integer, db.ForeignKey('planet.planet_id'))
-    planet = db.relationship('Planet', backref='favorite_planet', lazy=True)
+    relation_user = db.Column(db.Integer, db.ForeignKey('user.user_id', ondelete='cascade'))
+    relation_planet = db.Column(db.Integer, db.ForeignKey('planet.planet_id', ondelete='cascade'))
+    planet = db.relationship('Planet', cascade="all,delete", passive_deletes=True, backref='favorite_planet')
 
 
     def __repr__(self):
